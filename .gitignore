@@ -44,3 +44,6 @@ proguard/
 
 # Android Studio自动生成的文件
 .navigation/
+
+# 打包生成分类文件
+output-metadata.json
