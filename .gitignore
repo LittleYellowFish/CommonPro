@@ -1,4 +1,4 @@
-*.iml
+#*.iml
 .gradle
 /local.properties
 /.idea/caches
@@ -12,4 +12,35 @@
 /captures
 .externalNativeBuild
 .cxx
+#local.properties
+
+
+# 忽略编译产生的临时文件
+*.class
+
+# 编译生成的文件
+build/
+captures/
+
+# 本地配置文件
+*.iml
+.gradle/
 local.properties
+
+# Android Studio配置
+.idea/
+
+# 生成的apk文件
+*.apk
+
+# 临时备份文件
+*.bak
+
+# ProGuard文件
+proguard/
+
+# Log文件
+*.log
+
+# Android Studio自动生成的文件
+.navigation/
