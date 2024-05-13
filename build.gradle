@@ -5,14 +5,45 @@ plugins {
 }
 
 task clean(type: Delete) {
+    println 'task clean'
     delete rootProject.buildDir
 }
 
+task outputUrl() {
+    println 'task outputUrl'
+}
+
 allprojects {
+    //文件使用或覆盖了已过时的 API警告
+//    gradle.projectsEvaluated {
+//        tasks.withType(JavaCompile) {
+//            options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+//        }
+//    }
+
     tasks.withType(JavaCompile) {
         options.encoding = "UTF-8"
     }
+    repositories.each {
+        println "123"
+        println it.getUrl() // 输出url
+    }
+
+    //如果工程中的大多数module都是支持到Java8，那么可以在根目录中的build.gradle中配置最低
+    //对于某个支持到Java9的module，当然可以在它里面的build.gradle配置Java9的支持：
+    tasks.withType(JavaCompile) {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
 }
 
+//全局变量,使用rootProject.ext调用
+ext {
+    minSdkVersion = 21
+    targetSdkVersion = 31
+}
+
+//kotlin版本的全局变量。
+ext.appcompat = '1.3.0'
 
 

@@ -11,12 +11,15 @@ import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
+import com.example.testapp.BuildConfig;
 import com.example.testapp.R;
 
 public class MainFragment extends Fragment {
 
     private MainViewModel mViewModel;
+    private TextView textView;
 
     public static MainFragment newInstance() {
         return new MainFragment();
@@ -26,7 +29,10 @@ public class MainFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.main_fragment, container, false);
+
+        View view = inflater.inflate(R.layout.main_fragment, container, false);
+        textView = view.findViewById(R.id.message);
+        return view;
     }
 
     @Override
@@ -34,6 +40,12 @@ public class MainFragment extends Fragment {
         super.onActivityCreated(savedInstanceState);
         mViewModel = new ViewModelProvider(this).get(MainViewModel.class);
         // TODO: Use the ViewModel
+
+        String hostName = getString(R.string.build_host);
+        String flavor = BuildConfig.FLAVOR;
+        String message = "渠道:" + flavor + "\n" + (BuildConfig.IS_FOR_TEST ? "测试包" : "正式包") + "\n" +
+                "最新提交:" + BuildConfig.LAST_COMMIT + "\n" + hostName;
+        textView.setText(message);
     }
 
 }

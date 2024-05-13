@@ -1,6 +1,11 @@
 plugins {
     id 'com.android.application'
 }
+//抽离Task脚本
+//apply from: '../taskcode.gradle'
+
+//局部定义变量
+def compileSdkNum = 31
 
 android {
     signingConfigs {
@@ -11,7 +16,7 @@ android {
             keyPassword '123456'
         }
     }
-    compileSdk 31
+    compileSdk compileSdkNum
 
     defaultConfig {
         manifestPlaceholders TYPE: 1
@@ -20,16 +25,16 @@ android {
 //        applicationId "com.example.testapp"
         //修改app包名
         applicationId 'com.yl.test'
-        minSdk 21
-        targetSdk 31
+        minSdk rootProject.ext.minSdkVersion
+        targetSdk rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
 
         //包名后缀
-        applicationIdSuffix 'yl'
+        applicationIdSuffix 'xy'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         //版本号后缀
-        versionNameSuffix 'yl'
+        versionNameSuffix '.yl'
         //签名方式
         signingConfig signingConfigs.debug
         //混淆文件
@@ -37,23 +42,137 @@ android {
         //是否分包，解决方法数大于65k的问题
         multiDexEnabled true
 //        resourceConfigurations += ['COMMON_COLOR']
+
+        // String中的引号记得加转义符
+        buildConfigField 'String', 'API_URL', '"http://www.kale.com/api"'
+        buildConfigField "boolean", "IS_FOR_TEST", "true"
+        buildConfigField "String", "LAST_COMMIT", "\"" + revision() + "\""
+        resValue "string", "build_host", hostName()
+
+        //声明一个或多个维度
+        flavorDimensions "test"
+//        flavorDimensions "test","test2" // 按照先后进行排序
+
     }
 
     buildTypes {
-        release {
+        debug {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debug
+        }
+
+        release {
+            zipAlignEnabled true
+            minifyEnabled true //是否混淆
+            shrinkResources true // 是否去除无效的资源文件
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debug
+        }
+
+        rtm.initWith(buildTypes.release) // 继承release的配置
+        rtm {
+            zipAlignEnabled false // 覆盖release中的一些配置
         }
     }
+    //module是支持到Java8
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
+    // 动态生成所有渠道的APK
+    android.applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            if (variant.buildType.name == 'release' || variant.buildType.name == 'debug') {
+                // 为发布版本定义一个通用的命名模式
+                def fileName = "${variant.flavorName}-${variant.buildType.name}_${releaseTime()}.apk"
+                outputFileName = fileName
+            }
+
+            //对于某些不想打包的Flavor或者维度，我们可以利用variantFilter进行操作，
+            //下面的代码会将“minApi21”和“demo”的类型直接跳过：
+//            def names = variant.flavors*.name
+//            // To check for a build type instead, use variant.buildType.name == "buildType"
+//            if (names.contains("minApi21") && names.contains("demo")) {
+//                // Gradle ignores any variants that satisfy the conditions above.
+//                setIgnore(true)
+//            }
+            //改名
+//            def outputFile = output.outputFile
+//            print '原始包名:' + outputFile.name + "\n"
+//            if (outputFile != null && outputFile.name.endsWith('.apk')) {
+//                def fileName = outputFile.name.replace("app",
+//                        "${variant.flavorName}_${variant.buildType.name}_${releaseTime()}")
+//                outputFileName = fileName
+//            }
+        }
+    }
+
+    //适配所有Flavor的
+    productFlavors.all { flavor ->
+        manifestPlaceholders.put("UMENG_CHANNEL", name)
+    }
+
+    // 定义所有渠道列表
+    productFlavors {
+        flavor1 {
+            // 渠道特定的配置
+            versionNameSuffix "-flavor1"
+            applicationIdSuffix ".flavor1"
+            buildConfigField 'String', 'API_URL', '"http://www.kale.com/api1"'
+
+            dimension "test"
+        }
+        flavor2 {
+            // 渠道特定的配置
+            versionNameSuffix "-flavor2"
+            applicationIdSuffix ".flavor2"
+            buildConfigField 'String', 'API_URL', '"http://www.kale.com/api2"'
+
+            dimension "test"
+        }
+        // ... 更多渠道 ...
+    }
+
+    // 根据flavor和build type设置不同的源码和资源目录
+    sourceSets {
+        flavor1 {
+            java.srcDirs = ['src/main']
+            res.srcDirs += 'src/main/res'
+        }
+        flavor2 {
+            java.srcDirs = ['src/flavor2']
+            res.srcDirs += 'src/flavor2/res'
+        }
+    }
+}
+//打包的时间
+static def releaseTime() {
+    return new Date().format("yyyy-MM-dd", TimeZone.getTimeZone("UTC"))
+}
+
+static def hostName() {
+    def userName = System.getProperty("user.name")
+    def hostName = InetAddress.localHost.hostName
+    print 'user.name:' + userName + ',hostName:' + hostName + '\n'
+    return System.getProperty("user.name") + "@" + InetAddress.localHost.hostName
+}
+//最新提交版本号
+def revision() {
+    def code = new ByteArrayOutputStream()
+    exec {
+        // 执行：git rev-parse --short HEAD
+        commandLine 'git', 'rev-parse', '--short', 'HEAD'
+        standardOutput = code
+    }
+    print 'code:' + code
+    return code.toString().substring(0, code.size() - 1) // 去掉最后的\n
 }
 
 dependencies {
 
-    implementation 'androidx.appcompat:appcompat:1.3.0'
+    implementation "androidx.appcompat:appcompat:$appcompat"
     implementation 'com.google.android.material:material:1.4.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.3.1'

@@ -1,0 +1,54 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+}
+
+//ext.autoVersionName = { ->
+//    def branch = new ByteArrayOutputStream()
+//    exec {
+//        commandLine 'git', 'rev-parse', '--abbrev-ref', 'HEAD'
+//        standardOutput = branch
+//    }
+//    def cmd = 'git describe --tags'
+//    def version = cmd.execute().text.trim()
+//
+//    return branch.toString().trim() == "master" ? version :
+//            version.split('-')[0] + '-' + branch.toString().trim() // v1.0.1-dev
+//}
+
+
+ext.autoVersionCode = {
+    def cmd = 'git tag --list'
+    def code = cmd.execute().text.trim()
+    return code.toString().split("\n").size()
+}
+
+
+tasks.whenTaskAdded { task ->
+    if (task.name.contains('AndroidTest')) {
+        task.enabled = false
+    }
+}
+
+
+android {
+    applicationVariants.all { variant ->
+        variant.assemble.doLast {
+            //If this is a 'release' build, reveal the compiled apk in finder/explorer
+            if (variant.buildType.name.contains('release')) {
+                def path = null
+                variant.outputs.each { output ->
+                    path = output.outputFile
+                }
+                if (path != null) {
+                    if (System.properties['os.name'].toLowerCase().contains('mac os x')) {
+                        ['open', '-R', path].execute()
+                    } else if (System.properties['os.name'].toLowerCase().contains('windows')) {
+                        ['explorer', '/select,', path].execute()
+                    }
+                }
+            }
+        }
+    }
+}

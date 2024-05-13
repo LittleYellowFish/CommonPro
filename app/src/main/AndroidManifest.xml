@@ -16,6 +16,9 @@
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
+
+                <!-- 仅仅是用来占位的key -->
+                <data android:scheme="${UMENG_CHANNEL}" />
             </intent-filter>
         </activity>
     </application>
