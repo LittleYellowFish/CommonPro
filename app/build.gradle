@@ -6,14 +6,50 @@ plugins {
 
 //局部定义变量
 def compileSdkNum = 31
+//实现versionName自增
+def autoVersionName() {
+    def branch = new ByteArrayOutputStream()
+    exec {
+        commandLine 'git', 'rev-parse', '--abbrev-ref', 'HEAD'
+        standardOutput = branch
+    }
+    def cmd = 'git describe --tags'
+    def version = cmd.execute().text.trim()
+
+    println '版本号：'+version
+    return branch.toString().trim() == "master" ? version :
+            version.split('-')[0] + '-' + branch.toString().trim() // v1.0.1-dev
+}
+//实现versionCode自增
+def autoVersionCode() {
+    def cmd = 'git tag --list'
+    def code = cmd.execute().text.trim()
+    println 'code1:'+code
+    return code.toString().split("\n").size()
+}
+
+//签名
+Properties props = new Properties()
+File f = file(rootProject.file("signing.properties"))
+// 如果这个签名文件存在则用，如果不存在就从gradle.properties中取
+if (!f.exists()) {
+    f = file(rootProject.file("gradle.properties"))
+}
+props.load(new FileInputStream(f))
 
 android {
     signingConfigs {
         debug {
-            storeFile file('/Users/yle/test.jks')
-            storePassword '123456'
-            keyAlias 'key0'
-            keyPassword '123456'
+            storeFile file(props['STORE_FILE_PATH'])
+            storePassword props['STORE_PASSWORD']
+            keyAlias props['KEY_ALIAS']
+            keyPassword props['KEY_PASSWORD']
+        }
+        release {
+            storeFile file(props['STORE_FILE_PATH'])
+            storePassword props['STORE_PASSWORD']
+            keyAlias props['KEY_ALIAS']
+            keyPassword props['KEY_PASSWORD']
         }
     }
     compileSdk compileSdkNum
@@ -27,8 +63,8 @@ android {
         applicationId 'com.yl.test'
         minSdk rootProject.ext.minSdkVersion
         targetSdk rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode autoVersionCode()
+        versionName autoVersionName()
 
         //包名后缀
         applicationIdSuffix 'xy'
@@ -90,7 +126,7 @@ android {
                 outputFileName = fileName
             }
 
-            //对于某些不想打包的Flavor或者维度，我们可以利用variantFilter进行操作，
+            //1、对于某些不想打包的Flavor或者维度，我们可以利用variantFilter进行操作，
             //下面的代码会将“minApi21”和“demo”的类型直接跳过：
 //            def names = variant.flavors*.name
 //            // To check for a build type instead, use variant.buildType.name == "buildType"
@@ -98,7 +134,7 @@ android {
 //                // Gradle ignores any variants that satisfy the conditions above.
 //                setIgnore(true)
 //            }
-            //改名
+            //2、改名
 //            def outputFile = output.outputFile
 //            print '原始包名:' + outputFile.name + "\n"
 //            if (outputFile != null && outputFile.name.endsWith('.apk')) {
@@ -106,6 +142,25 @@ android {
 //                        "${variant.flavorName}_${variant.buildType.name}_${releaseTime()}")
 //                outputFileName = fileName
 //            }
+        }
+        //3、自动打开apk的目录
+        //下面的脚本通过applicationVariants来监听apk生成的时机，如果是Rlease版本就打开文件管理器：
+        variant.assemble.doLast {
+            //If this is a 'release' build, reveal the compiled apk in finder/explorer
+            if (variant.buildType.name.contains('release')) {
+                def path = null
+                variant.outputs.each { output ->
+                    path = output.outputFile
+                }
+                println "apk路径："+path
+                if (path != null) {
+                    if (System.properties['os.name'].toLowerCase().contains('mac os x')) {
+                        ['open', '-R', path].execute()
+                    } else if (System.properties['os.name'].toLowerCase().contains('windows')) {
+                        ['explorer', '/select,', path].execute()
+                    }
+                }
+            }
         }
     }
 
@@ -166,7 +221,7 @@ def revision() {
         commandLine 'git', 'rev-parse', '--short', 'HEAD'
         standardOutput = code
     }
-    print 'code:' + code
+    print 'code2:' + code
     return code.toString().substring(0, code.size() - 1) // 去掉最后的\n
 }
 

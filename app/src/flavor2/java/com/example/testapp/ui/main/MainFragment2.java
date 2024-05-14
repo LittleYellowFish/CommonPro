@@ -8,6 +8,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -45,7 +46,8 @@ public class MainFragment2 extends Fragment {
         String flavor = BuildConfig.FLAVOR;
         String message = "渠道2:" + flavor + "\n" + (BuildConfig.IS_FOR_TEST ? "测试包" : "正式包") + "\n" +
                 "最新提交:" + BuildConfig.LAST_COMMIT + "\n" + hostName;
-//        textView.setText(message);
+        textView.setText(message);
+        Log.d("MainFragment2",message);
     }
 
 }
