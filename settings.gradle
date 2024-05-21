@@ -3,6 +3,10 @@ pluginManagement {
         gradlePluginPortal()
         google()
         mavenCentral()
+//        发布版本：https://blog.csdn.net/yechaoa/article/details/133256952
+        maven {
+            url './repo'
+        }
     }
 }
 dependencyResolutionManagement {
@@ -10,8 +14,14 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven { url 'https://jitpack.io' }
     }
 }
+
+//该文件最先被解析和执行，一些通用的初始化操作可以放在这里执行
+def projectDir = rootProject.projectDir.getAbsolutePath()
+println projectDir
+
 rootProject.name = "TestApp"
 include ':app'
 

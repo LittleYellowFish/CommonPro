@@ -6,6 +6,9 @@ if (!isFusion.toBoolean()) {
 } else {
     apply plugin: 'com.android.library'
 }
+
+apply from: '../bintray.gradle' //用来发布版本的，如果报错可以屏蔽
+
 android {
     compileSdk 31
 
@@ -70,4 +73,6 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+
+    implementation 'com.android.tools.build:gradle:7.3.0'
 }

@@ -1,4 +1,15 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
+//项目根目录下的build.gradle，对应脚本执行时的rootProject对象
+buildscript{
+    //buildscript下的repositories是gradle脚本自身需要的资源，
+    repositories{
+
+    }
+    dependencies {
+//        classpath('com.yl:login:3.0.0')
+    }
+}
+
 plugins {
     id 'com.android.application' version '7.1.2' apply false
     id 'com.android.library' version '7.1.2' apply false
@@ -13,6 +24,7 @@ task outputUrl() {
     println 'task outputUrl'
 }
 
+//allprojects下的repositories是项目所有模块需要的资源。
 allprojects {
     //文件使用或覆盖了已过时的 API警告
 //    gradle.projectsEvaluated {

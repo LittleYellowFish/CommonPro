@@ -1,5 +1,6 @@
 plugins {
     id 'com.android.application'
+//    id 'com.yl.login'
 }
 //抽离Task脚本
 //apply from: '../taskcode.gradle'
@@ -16,7 +17,7 @@ def autoVersionName() {
     def cmd = 'git describe --tags'
     def version = cmd.execute().text.trim()
 
-    println '版本号：'+version
+    println '版本号：' + version
     return branch.toString().trim() == "master" ? version :
             version.split('-')[0] + '-' + branch.toString().trim() // v1.0.1-dev
 }
@@ -24,7 +25,7 @@ def autoVersionName() {
 def autoVersionCode() {
     def cmd = 'git tag --list'
     def code = cmd.execute().text.trim()
-    println 'code1:'+code
+    println 'code1:' + code
     return code.toString().split("\n").size()
 }
 
@@ -37,6 +38,7 @@ if (!f.exists()) {
 }
 props.load(new FileInputStream(f))
 
+//gradle基本知识：https://www.jianshu.com/p/47cbbb4eab13、https://www.jianshu.com/p/ffcb7bba21a2
 android {
     signingConfigs {
         debug {
@@ -52,7 +54,12 @@ android {
             keyPassword props['KEY_PASSWORD']
         }
     }
+
+    //编译时的SDK版本号
+//    告诉gradle用那个Android SDK的版本编译你的应用，修改它不会改变运行时的行为，因为它不会被包含进入最终的APK中；因此，推荐使用最新的SDK编译；如果使用Suppport Library，那么compileSdkVersion必须要大于等于它的大版本号
     compileSdk compileSdkNum
+    //编译时指定的buildtools版本
+//    buildToolsVersion "31.0.0"
 
     defaultConfig {
         manifestPlaceholders TYPE: 1
@@ -61,13 +68,18 @@ android {
 //        applicationId "com.example.testapp"
         //修改app包名
         applicationId 'com.yl.test'
+//        应用最低可运行的要求；它必须要大于等于你所依赖的库的minSdkVersion
         minSdk rootProject.ext.minSdkVersion
+//        Android提供向前兼容的重要依据
+//        因为随着Android系统的升级，某个api或者模块的行为有可能发生改变，但是为了保证老APK的行为和以前兼容，只要APK的targetSdkVersion不变，那么即使这个APK安装在新的Android系统上，那么行为还是保持老的系统上的行为。
+//        系统在调用某个api或者模块的时候，会先检查调用的APK的targetSdkVersion，来决定执行什么行为。
         targetSdk rootProject.ext.targetSdkVersion
         versionCode autoVersionCode()
         versionName autoVersionName()
 
         //包名后缀
         applicationIdSuffix 'xy'
+        //执行单元测试时指定的Runner，在正式打包时并不会使用到
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         //版本号后缀
         versionNameSuffix '.yl'
@@ -89,21 +101,37 @@ android {
         flavorDimensions "test"
 //        flavorDimensions "test","test2" // 按照先后进行排序
 
+        // 过滤，对于国际化支持只打包中文资源，和"xxhdpi"
+        // 注意如果在这里指定了dpi，则flavor中不能指定的dpi与这里必须一致否则会报错
+        resConfigs "zh-rCN", "xhdpi"
     }
 
     buildTypes {
         debug {
+            //可以调试
+            debuggable true
+            //jni可调试
+            jniDebuggable true
+            //渲染脚本可调试
+            renderscriptDebuggable true
+            //minifyEnabled表示代码是否可以压缩，裁剪优化，需要配合其他的工具一起使用，如proguard
+            //添加代码混淆，注意添加混淆时，必须将minifyEnabled 置为true，否则混淆不生效
+            //同样如果没有使用代码混淆必须置为false，否则编译失败
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.debug
         }
 
         release {
+            //压缩对齐，提高运行时的效率，也可以使用zipAlignEnabled true
             zipAlignEnabled true
             minifyEnabled true //是否混淆
-            shrinkResources true // 是否去除无效的资源文件
+//            当我们需要动态加载资源时，需要在不要使用该优化，否则可能会出现运行时报错或者显示效果不正确的问题
+            shrinkResources true // 是否去除无效的资源文件 https://developer.android.google.cn/build/shrink-code?hl=zh-cn
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.debug
+            //添加一个字符资源到values/strings.xml文件中，目前无法指定资源的语言类别
+            resValue "string", "custom_name", "测试用户"
         }
 
         rtm.initWith(buildTypes.release) // 继承release的配置
@@ -111,10 +139,30 @@ android {
             zipAlignEnabled false // 覆盖release中的一些配置
         }
     }
+    //在打包时，移除一些许可，注意文档
+    packagingOptions {
+        exclude 'META-INF/DEPENDENCIES.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+    }
+
+    lintOptions {
+        //关闭编译release版本的lint检查
+        checkReleaseBuilds false
+
+        //关闭link检查报错中断编译选项
+        abortOnError false
+    }
     //module是支持到Java8
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    buildFeatures {
+        viewBinding true
     }
 
     // 动态生成所有渠道的APK
@@ -152,7 +200,7 @@ android {
                 variant.outputs.each { output ->
                     path = output.outputFile
                 }
-                println "apk路径："+path
+                println "apk路径：" + path
                 if (path != null) {
                     if (System.properties['os.name'].toLowerCase().contains('mac os x')) {
                         ['open', '-R', path].execute()
@@ -181,6 +229,7 @@ android {
         }
         flavor2 {
             // 渠道特定的配置
+//            applicationId "x.y.z"
             versionNameSuffix "-flavor2"
             applicationIdSuffix ".flavor2"
             buildConfigField 'String', 'API_URL', '"http://www.kale.com/api2"'
@@ -192,16 +241,49 @@ android {
 
     // 根据flavor和build type设置不同的源码和资源目录
     sourceSets {
+//        srcDir和srcDirs的区别，当使用srcDir指定文件目录时，不允许将要合并的源集的同一目录下有一样名称的资源，提示重复资源异常，而srcDirs则会根据前面所说的优先级进行覆盖。
+//        替换res资源采用的是合并的原则，即最终的资源是所有进行合并的资源的并集，出现资源ID重复的资源，采用优先级最高的那个
+//        注意，layout资源是以整个文件覆盖的方式合并的。
+//        assets目录中的文件是以整个文件覆盖的方式进行合并的。
         flavor1 {
             java.srcDirs = ['src/main']
             res.srcDirs += 'src/main/res'
+
+            //指定一个新的jnilibs为根目录下的jnilibs
+//            jniLibs.srcDirs=[rootProject.projectDir.absolutePath + '/jnilibs']
+
+            //指定一个新的assets为根目录下的skyTestAssets目录
+//            assets.srcDirs = [rootProject.projectDir.absolutePath + '/assets/skyTestAssets']
+
+            //意图过滤掉`src/main/assets/mainIngoreTest.txt`文件
+//            assets.exclude (project.projectDir.absolutePath + "\\src\\main\\assets\\mainIngoreTest.txt")
+
+            //或者采用闭包
+            assets.exclude{
+                File ff = it.file
+                println ff.absolutePath
+                ff.absolutePath.endsWith("mainIngoreTest.txt")
+            }
         }
         flavor2 {
             java.srcDirs = ['src/flavor2']
             res.srcDirs += 'src/flavor2/res'
         }
     }
+
+    //    4、强制版本号
+    configurations.all {
+        // 指定某个库的版本
+        resolutionStrategy.force "androidx.appcompat:appcompat:1.3.0"
+
+        // 一次指定多个库的版本
+        resolutionStrategy {
+            force 'com.android.support.test.espresso:espresso-core:3.4.0',
+                    "androidx.appcompat:appcompat:1.3.0"
+        }
+    }
 }
+
 //打包的时间
 static def releaseTime() {
     return new Date().format("yyyy-MM-dd", TimeZone.getTimeZone("UTC"))
@@ -225,6 +307,18 @@ def revision() {
     return code.toString().substring(0, code.size() - 1) // 去掉最后的\n
 }
 
+ext.PLUGIN = true
+
+ext.isPlugin = {
+    try {
+        if (PLUGIN.toBoolean()) {
+            return true
+        }
+    } catch (Exception ignore) {
+    }
+    return false
+}
+
 dependencies {
 
     implementation "androidx.appcompat:appcompat:$appcompat"
@@ -235,4 +329,111 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+//    implementation 'com.github.LittleYellowFish:CommonPro:1.0'
+    implementation fileTree(dir: '../libs', include: '*.aar')
+    implementation fileTree(dir: '../libs', include: '*.jar')
+//    1、api	编译时依赖和运行时依赖
+//    implementation	基础依赖方式，运行时依赖，对于依赖结构做了优化
+//    compileOnly	类似于provided，仅仅在编译时进行依赖，不会将依赖打包到app中
+//    runtimeOnly	类似于apk，它仅仅将依赖打包到apk中，在编译时无法获得依赖的类
+//    annotationProcessor	类似于apt，是注解处理器的依赖
+//    testImplementation	Java测试库的依赖，仅仅在测试环境生效
+//    androidTestImplementation	Android测试库的依赖，仅仅在测试环境生效
+//    [Flavor]Api	针对于某个Flavor的依赖，写法是Flavor的名称+依赖方式
+//    buildTypes是debug的时候才能被依赖
+//    debugImplementation 'com.github.nekocode.ResourceInspector:resinspector:0.5.3'
+    // 编写时无法访问lib中的资源，lib会被打包到apk中
+//    runtimeOnly project(':lib')
+    // 编译时进行依赖，不会将依赖打包到app中
+//    compileOnly 'com.baoyz.treasure:treasure:0.7.4'
+
+    // BuildTypes为test的 依赖项junit
+//    testCompile 'junit:junit:4.12'
+
+    // BuildTypes为debug的添加含有源码的模块依赖
+//    debugCompile project(":mylibrary")
+
+    // flavor为sky的指定jar库，且不使用`okhttp-3.2.0.jar`库，使用skyCommon目录下的okhttp-3.3.1.jar
+//    skyCompile fileTree(include: ['*.jar'], dir: 'jar/sky', excludes: ['okhttp-3.2.0.jar'])
+
+    // 构建变体依赖项指定
+//    skyCommonClientCustomCompile fileTree(include: ['*.jar'], dir: 'jar/skyCommonClientCustom')
+
+//    2、组合依赖,有相关性的
+    implementation([
+            'io.reactivex.rxjava2:rxjava:2.1.3',
+            'io.reactivex.rxjava2:rxandroid:2.0.1'
+    ])
+
+//    3、依赖传递
+//    @符号的作用是仅仅下载文件本身，不下载它自身的依赖，等于关闭了以来传递。如果你要支持依赖传递，那么就必须要写transitive = true
+    implementation("androidx.appcompat:appcompat:1.3.0@aar") {
+        transitive = true
+    }
+
+//    4、强制版本号
+//    们还可以通过force来强制指定某个库的版本号：
+    implementation group: 'androidx.appcompat', name: 'appcompat', version: '1.3.0', force: true
+
+//    5.1exclude关键字
+//    implementation('com.android.support:appcompat-v7:23.2.0') {
+//        exclude group: 'com.android.support', module: 'support-annotations' // 写全称
+//        exclude group: 'com.android.support', module: 'support-compat'
+//        exclude group: 'com.android.support', module: 'support-v4'
+//        exclude group: 'com.android.support', module: 'support-vector-drawable'
+//    }
+//    5.2剔除整个组织的库（一下子剔除所有support库）：
+//    implementation('com.facebook.fresco:animated-webp:0.13.0') {
+//        exclude group: 'com.android.support' // 仅仅写组织名称
+//    }
+//    5.3全局剔除某个库
+//    configurations {
+//        all*.exclude group: 'org.hamcrest', module: 'hamcrest-core'
+//    }
+
+//    6、优化依赖
+//    ext.libs =
+//            ['com.baoyz.treasure:treasure:0.7.4',
+//             'com.squareup.okhttp3:okhttp:3.9.0',
+//             'io.reactivex.rxjava2:rxjava:2.1.3']
+//
+//    if (isPlugin()) {
+//        compileOnly(libs) // 不将依赖打入App中
+//    } else {
+//        implementation(libs)
+//    }
+//
+//    if (isPlugin()) {
+//        implementation project(':releaselib')
+//    } else {
+//        implementation project(':debuglib')
+//    }
+
+//    7、优化配置
+    // 并不定义PLUGIN这个变量
+//ext.PLUGIN = true
+
+//    ext.isPlugin = {
+//        try {
+//            if (PLUGIN.toBoolean()) {
+//                return true
+//            }
+//        } catch (Exception ignore) {
+//        }
+//        return false
+//    }
+
+//    执行命令行时可进行修改：
+//    gradlew clean -P PLUGIN=true installInnertestDevDebug
+
+//    8、依赖module：
+//    implementation project(':lib')
+//    如果的module在多级目录中，那么首先要在settings.gradle中进行配置：
+//    include ':app', ':lib', ':libraries:lib01', ':libraries:lib02'
+//    implementation project(':libraries:lib01')
+//    implementation project(':libraries:lib02')
+    // 依赖当前module的libs目录下的所有jar
+//    implementation fileTree(dir: 'libs', include: ['*.jar'])
+//    依赖外部目录，librarymodule中libs目录下的所有jar
+//    implementation fileTree(dir: '../somedir/libstore', include: '*.jar')
 }
