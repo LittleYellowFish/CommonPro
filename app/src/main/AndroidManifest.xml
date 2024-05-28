@@ -11,6 +11,19 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.TestApp"
         tools:replace="android:label">
+
+        <service
+            android:name=".service.CalcService"
+            android:exported="false"
+            android:process=":remote"
+            tools:ignore="WrongManifestParent">
+            <intent-filter>
+                <action android:name="com.example.taidl.calc" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </service>
+
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -23,6 +36,7 @@
                 <data android:scheme="${UMENG_CHANNEL}" />
             </intent-filter>
         </activity>
+        <activity android:name=".AidlActivity" />
     </application>
 
 </manifest>

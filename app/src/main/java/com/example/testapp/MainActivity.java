@@ -6,8 +6,7 @@ import android.content.Intent;
 import android.os.Bundle;
 
 //import com.example.login.ui.login.LoginActivity;
-import com.example.login.ui.login.LoginActivity;
-import com.example.testapp.ui.main.MainFragment;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -21,6 +20,8 @@ public class MainActivity extends AppCompatActivity {
 //                    .commitNow();
 //        }
 
-        startActivity(new Intent(this, LoginActivity.class));
+//        startActivity(new Intent(this, LoginActivity.class));
+        startActivity(new Intent(this, AidlActivity.class));
     }
+
 }

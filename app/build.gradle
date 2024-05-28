@@ -78,7 +78,7 @@ android {
         versionName autoVersionName()
 
         //包名后缀
-        applicationIdSuffix 'xy'
+//        applicationIdSuffix 'xy'
         //执行单元测试时指定的Runner，在正式打包时并不会使用到
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         //版本号后缀
@@ -222,7 +222,7 @@ android {
         flavor1 {
             // 渠道特定的配置
             versionNameSuffix "-flavor1"
-            applicationIdSuffix ".flavor1"
+//            applicationIdSuffix ".flavor1"
             buildConfigField 'String', 'API_URL', '"http://www.kale.com/api1"'
 
             dimension "test"
