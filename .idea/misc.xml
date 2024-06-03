@@ -6,6 +6,10 @@
         <entry key="app/src/flavor1/res/layout/main_activity.xml" value="0.23125" />
         <entry key="app/src/flavor2/res/layout/main_activity.xml" value="0.23125" />
         <entry key="app/src/main/res/layout/main_fragment.xml" value="0.23125" />
+        <entry key="binding/src/main/res/layout/activity_data_binding.xml" value="0.1" />
+        <entry key="binding/src/main/res/layout/activity_test.xml" value="0.10092592592592593" />
+        <entry key="binding/src/main/res/layout/layout11.xml" value="0.24479166666666666" />
+        <entry key="binding/src/main/res/layout/layout12.xml" value="0.24479166666666666" />
       </map>
     </option>
   </component>

@@ -1,5 +1,7 @@
 plugins {
     id 'com.android.application'
+//    id 'kotlin-android'
+//    id 'kotlin-kapt'
 //    id 'com.yl.login'
 }
 //抽离Task脚本
