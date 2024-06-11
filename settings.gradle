@@ -27,3 +27,4 @@ include ':app'
 
 include ':login'
 include ':binding'
+include ':lib_base'

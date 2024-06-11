@@ -1,0 +1,65 @@
+plugins {
+    id 'com.android.library'
+    id 'kotlin-android'
+    id 'kotlin-kapt'
+}
+
+android {
+    compileSdk 31
+
+    defaultConfig {
+        minSdk 21
+        targetSdk 31
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+    buildFeatures {
+        dataBinding true
+    }
+}
+def retrofit_version = '2.9.0'
+def lifecycle_version = '2.4.1'
+
+dependencies {
+
+    implementation 'androidx.appcompat:appcompat:1.3.0'
+    implementation 'com.google.android.material:material:1.4.0'
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+
+    api 'com.github.CymChad:BaseRecyclerViewAdapterHelper:2.9.50'
+    api 'com.orhanobut:logger:2.2.0'
+
+    api "com.squareup.retrofit2:retrofit:${retrofit_version}"
+    api "com.squareup.retrofit2:converter-gson:${retrofit_version}"
+    api "com.squareup.retrofit2:adapter-rxjava2:${retrofit_version}"
+
+    api "androidx.lifecycle:lifecycle-runtime-ktx:${lifecycle_version}"
+    api "androidx.lifecycle:lifecycle-viewmodel-ktx:${lifecycle_version}"
+    api "androidx.lifecycle:lifecycle-livedata-ktx:${lifecycle_version}"
+//    api "androidx.lifecycle:lifecycle-extensions:${lifecycle_extension}"
+
+    api 'androidx.activity:activity-ktx:1.4.0'
+    api 'androidx.fragment:fragment-ktx:1.4.0'
+
+    api 'androidx.recyclerview:recyclerview:1.2.1'
+    api 'com.android.support:recyclerview-v7:28.0.0'
+}
