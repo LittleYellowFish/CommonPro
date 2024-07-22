@@ -4,7 +4,7 @@ import android.view.View
 import androidx.annotation.LayoutRes
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
-import com.pengda.mobile.hhjz.mvvm.util.inflateBindingWithGeneric
+import com.example.lib_base.mvvm.util.inflateBindingWithGeneric
 import com.example.lib_base.mvvm.util.notNull
 
 /**

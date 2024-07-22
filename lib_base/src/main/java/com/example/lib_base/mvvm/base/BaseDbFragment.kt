@@ -5,7 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.ViewDataBinding
-import com.pengda.mobile.hhjz.mvvm.util.inflateBindingWithGeneric
+import com.example.lib_base.mvvm.util.inflateBindingWithGeneric
 
 /**
  * 作者　: hegaojian
